@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express, { Application, Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -17,6 +17,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
   }),
 );
+app.get("/", (req: Request, res: Response) => {
+  res.send("Hello, world!");
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
