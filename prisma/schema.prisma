@@ -12,13 +12,12 @@ model User {
   first_name      String
   last_name       String
   email           String        @unique
+  password        String        
   is_active       Boolean       @default(true)
   role            Role
   job_title       String?
-  department      Department?   @relation(fields: [department_id], references: [id])
-  department_id   BigInt?
-  organization    Organization? @relation(fields: [organization_id], references: [id])
-  organization_id BigInt?
+  department      String?
+  organization    String?
   delete_flag     Boolean       @default(false)
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
@@ -29,23 +28,9 @@ model User {
   reportedTickets TicketData[] @relation("Reporter")
 }
 
-model Department {
-  id         BigInt   @id @default(autoincrement())
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
 
-  users User[]
-}
 
-model Organization {
-  id         BigInt   @id @default(autoincrement())
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
 
-  users User[]
-}
 
 model Project {
   id                  BigInt          @id @default(autoincrement())
