@@ -30,7 +30,7 @@ export const boardStatusTypeDefs = gql`
   }
 
   type Mutation {
-    createBoardStatus(name: String!, status_category: StatusCategory!): BoardStatus!
+    createBoardStatus(name: String!, status_category: StatusCategory!): MutationResponse!
 
     updateBoardStatus(id: ID!, name: String, status_category: StatusCategory): MutationResponse!
 

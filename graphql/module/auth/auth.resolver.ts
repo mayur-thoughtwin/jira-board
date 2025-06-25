@@ -20,7 +20,7 @@ export const auhtResolvers = {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const user = await prisma.user.create({
+      await prisma.user.create({
         data: {
           first_name: firstName,
           last_name: lastName,
@@ -34,18 +34,9 @@ export const auhtResolvers = {
       });
 
       return {
-        id: user.id,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        email: user.email,
-        isActive: user.is_active,
-        role: user.role,
-        jobTitle: user.job_title,
-        department: user.department,
-        organization: user.organization,
-        deleteFlag: user.delete_flag,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at,
+        status: true,
+        message: "User created successfully",
+        timestamp: new Date().toISOString(),
       };
     },
 

@@ -43,7 +43,7 @@ export const authTypeDefs = gql`
       jobTitle: String
       department: String
       organization: String
-    ): User!
+    ): MutationResponse!
 
     login(email: String!, password: String!): String!
   }
