@@ -26,8 +26,23 @@ model User {
   createdTickets  Ticket[]     @relation("CreatedBy")
   assignedTickets TicketData[] @relation("Assignee")
   reportedTickets TicketData[] @relation("Reporter")
+  collaborators    UserCollaborator[] @relation("UserCollaboratorUser")
+  collaboratedWith UserCollaborator[] @relation("UserCollaboratorCollaborator")
 }
 
+model UserCollaborator {
+  id              BigInt @id @default(autoincrement())
+
+  user            User   @relation("UserCollaboratorUser", fields: [user_id], references: [id])
+  user_id         BigInt
+
+  collaborator    User   @relation("UserCollaboratorCollaborator", fields: [collaborator_id], references: [id])
+  collaborator_id BigInt
+
+  created_at      DateTime @default(now())
+
+  @@unique([user_id, collaborator_id]) // Prevent duplicate entries
+}
 
 
 
