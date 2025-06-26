@@ -52,8 +52,8 @@ model Project {
   name                String
   project_key         String          @unique
   icon                String?
-  project_category    ProjectCategory @relation(fields: [project_category_id], references: [id])
-  project_category_id BigInt
+  project_category    ProjectCategory? @relation(fields: [project_category_id], references: [id])
+  project_category_id BigInt?
   project_lead        User            @relation("ProjectLead", fields: [project_lead_id], references: [id])
   project_lead_id     BigInt
   delete_flag         Boolean         @default(false)

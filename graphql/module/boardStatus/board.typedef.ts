@@ -9,7 +9,7 @@ export const boardStatusTypeDefs = gql`
   }
 
   type BoardStatus {
-    id: ID!
+    id: BigInt!
     name: String!
     status_category: StatusCategory!
     delete_flag: Boolean!
@@ -24,9 +24,20 @@ export const boardStatusTypeDefs = gql`
     timestamp: String!
   }
 
+  type BoardStatusListResponse {
+    status: Boolean!
+    message: String!
+    data: [BoardStatus!]!
+  }
+  type BoardStatusResponse {
+    status: Boolean!
+    message: String!
+    data: BoardStatus
+  }
+
   type Query {
-    boardStatuses: [BoardStatus!]!
-    boardStatus(id: ID!): BoardStatus
+    boardStatuses: BoardStatusListResponse!
+    boardStatus(id: ID!): BoardStatusResponse!
   }
 
   type Mutation {

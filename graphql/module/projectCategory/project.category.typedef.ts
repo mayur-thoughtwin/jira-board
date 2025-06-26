@@ -32,8 +32,8 @@ export const projectCategoryTypeDefs = gql`
   }
 
   type Mutation {
-    createProjectCategory(input: CreateProjectCategoryInput!): ProjectCategory!
-    updateProjectCategory(input: UpdateProjectCategoryInput!): ProjectCategory!
+    createProjectCategory(input: CreateProjectCategoryInput!): MutationResponse!
+    updateProjectCategory(input: UpdateProjectCategoryInput!): MutationResponse!
     deleteProjectCategory(id: BigInt!): MutationResponse!
   }
 

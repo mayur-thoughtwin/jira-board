@@ -24,9 +24,7 @@ export const projectTypeDefs = gql`
   input CreateProjectInput {
     name: String!
     project_key: String!
-    icon: String
-    project_category_id: BigInt!
-    project_lead_id: BigInt!
+    project_category_id: BigInt
   }
 
   input UpdateProjectInput {
@@ -45,8 +43,8 @@ export const projectTypeDefs = gql`
   }
 
   type Mutation {
-    createProject(input: CreateProjectInput!): Project!
-    updateProject(input: UpdateProjectInput!): Project!
+    createProject(input: CreateProjectInput!): MutationResponse!
+    updateProject(input: UpdateProjectInput!): MutationResponse!
     deleteProject(id: BigInt!): MutationResponse!
   }
 

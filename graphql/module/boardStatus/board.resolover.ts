@@ -1,22 +1,65 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // schema/resolvers/boardStatus.ts
-import { PrismaClient } from "@prisma/client";
-// import { Context } from "../../../utils/context";
-const prisma = new PrismaClient();
+// import { PrismaClient } from "@prisma/client";
+import { Context } from "../../../utils/context";
 
 export const boardStatusResolvers = {
   Query: {
-    boardStatuses: async () => {
-      return prisma.boardStatus.findMany({
-        where: { delete_flag: false },
-        include: { tickets: true },
-      });
+    boardStatuses: async (_: any, __: any, context: Context) => {
+      const { prisma } = context;
+
+      try {
+        const statuses = await prisma.boardStatus.findMany({
+          where: { delete_flag: false },
+          orderBy: { id: "asc" },
+        });
+
+        return {
+          status: true,
+          message: "Data fetched successfully",
+          data: statuses,
+        };
+      } catch (error) {
+        return {
+          status: false,
+          message:
+            "Failed to fetch BoardStatuses: " +
+            (error instanceof Error ? error.message : String(error)),
+          data: [],
+        };
+      }
     },
-    boardStatus: async (_: any, args: { id: string }) => {
-      return prisma.boardStatus.findUnique({
-        where: { id: BigInt(args.id) },
-        include: { tickets: true },
-      });
+    boardStatus: async (_: any, args: { id: string }, context: Context) => {
+      const { prisma } = context;
+
+      try {
+        const status = await prisma.boardStatus.findUnique({
+          where: { id: BigInt(args.id) },
+          include: { tickets: true },
+        });
+
+        if (!status) {
+          return {
+            status: false,
+            message: "BoardStatus not found",
+            data: null,
+          };
+        }
+
+        return {
+          status: true,
+          message: "BoardStatus fetched successfully",
+          data: status,
+        };
+      } catch (error) {
+        return {
+          status: false,
+          message:
+            "Failed to fetch BoardStatus: " +
+            (error instanceof Error ? error.message : String(error)),
+          data: null,
+        };
+      }
     },
   },
 
@@ -24,19 +67,20 @@ export const boardStatusResolvers = {
     createBoardStatus: async (
       _: any,
       args: { name: string; status_category: string },
-      // context: Context,
+      context: Context,
     ) => {
-      // const { user, prisma } = context;
+      const { user, prisma } = context;
 
-      // if (!user) {
-      //   throw new Error("Unauthorized");
-      // }
+      if (!user || !["ADMIN", "PROJECT_MANAGER"].includes(user.role)) {
+        throw new Error("Unauthorized");
+      }
 
-      // Check if a BoardStatus with the same name already exists
+      console.log("user==>", user);
+
       const existing = await prisma.boardStatus.findFirst({
         where: {
           name: args.name,
-          delete_flag: false, // Optional: if you're using soft delete
+          delete_flag: false,
         },
       });
 
@@ -68,13 +112,13 @@ export const boardStatusResolvers = {
     updateBoardStatus: async (
       _: any,
       args: { id: string; name?: string; status_category?: string },
-      // context: Context,
+      context: Context,
     ) => {
-      // const { user, prisma } = context;
+      const { user, prisma } = context;
 
-      // if (!user) {
-      //   throw new Error("Unauthorized");
-      // }
+      if (!user || !["ADMIN", "PROJECT_MANAGER"].includes(user.role)) {
+        throw new Error("Unauthorized");
+      }
 
       try {
         const id = BigInt(args.id);
@@ -85,7 +129,7 @@ export const boardStatusResolvers = {
             where: {
               name: args.name,
               id: { not: id },
-              delete_flag: false, // optional, based on your schema
+              delete_flag: false,
             },
           });
 
@@ -120,7 +164,14 @@ export const boardStatusResolvers = {
       }
     },
 
-    deleteBoardStatus: async (_: any, args: { id: string }) => {
+    deleteBoardStatus: async (_: any, args: { id: string }, context: Context) => {
+      const { user, prisma } = context;
+
+      // Authorization check
+      if (!user || !["ADMIN", "PROJECT_MANAGER"].includes(user.role)) {
+        throw new Error("Unauthorized");
+      }
+
       try {
         await prisma.boardStatus.update({
           where: { id: BigInt(args.id) },

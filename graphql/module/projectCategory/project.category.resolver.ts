@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from "@prisma/client";
+import { Context } from "../../../utils/context";
+import { requireRole } from "../../../utils/requireRole";
 
 const prisma = new PrismaClient();
 
@@ -17,23 +19,55 @@ export const projectCategoryResolvers = {
   },
 
   Mutation: {
-    createProjectCategory: async (_: any, { input }: any) => {
-      await prisma.projectCategory.create({
+    createProjectCategory: async (_: any, { input }: any, context: Context) => {
+      requireRole(context, ["PROJECT_MANAGER"]);
+      const existing = await context.prisma.projectCategory.findFirst({
+        where: {
+          name: input.name,
+          delete_flag: false,
+        },
+      });
+
+      if (existing) {
+        return {
+          status: false,
+          message: "Project category with this name already exists.",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      await context.prisma.projectCategory.create({
         data: {
           name: input.name,
-          description: input.description,
+          description: input.description ?? null,
         },
-        include: { projects: true },
       });
+
       return {
         status: true,
-        message: "Project category created successfully",
+        message: "Project category created successfully.",
         timestamp: new Date().toISOString(),
       };
     },
+    updateProjectCategory: async (_: any, { input }: any, context: Context) => {
+      requireRole(context, ["PROJECT_MANAGER"]);
 
-    updateProjectCategory: async (_: any, { input }: any) => {
-      await prisma.projectCategory.update({
+      const existing = await context.prisma.projectCategory.findFirst({
+        where: {
+          id: BigInt(input.id),
+          delete_flag: false,
+        },
+      });
+
+      if (!existing) {
+        return {
+          status: false,
+          message: "Project category not found.",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      await context.prisma.projectCategory.update({
         where: { id: BigInt(input.id) },
         data: {
           name: input.name,

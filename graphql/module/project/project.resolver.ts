@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from "@prisma/client";
+import { Context } from "../../../utils/context";
+import { requireRole } from "../../../utils/requireRole";
 const prisma = new PrismaClient();
 
 export const projectResolvers = {
@@ -30,46 +32,79 @@ export const projectResolvers = {
   },
 
   Mutation: {
-    createProject: async (_: any, { input }: any) => {
-      return await prisma.project.create({
-        data: {
+    createProject: async (_: any, { input }: any, context: Context) => {
+      const { user, prisma } = context;
+
+      requireRole(context, ["PROJECT_MANAGER"]);
+
+      try {
+        if (!user?.userId) {
+          throw new Error("Invalid token: userId missing");
+        }
+
+        const data: any = {
           name: input.name,
           project_key: input.project_key,
-          icon: input.icon,
-          project_category_id: BigInt(input.project_category_id),
-          project_lead_id: BigInt(input.project_lead_id),
-        },
-        include: {
-          project_category: true,
-          project_lead: true,
-          tickets: true,
-          sprints: true,
-          backlogItems: true,
-        },
-      });
-    },
+          icon: null,
+          project_lead_id: BigInt(user.userId),
+        };
 
-    updateProject: async (_: any, { input }: any) => {
-      return await prisma.project.update({
-        where: { id: BigInt(input.id) },
-        data: {
-          name: input.name,
-          project_key: input.project_key,
-          icon: input.icon,
-          project_category_id: input.project_category_id && BigInt(input.project_category_id),
-          project_lead_id: input.project_lead_id && BigInt(input.project_lead_id),
-          delete_flag: input.delete_flag,
-        },
-        include: {
-          project_category: true,
-          project_lead: true,
-          tickets: true,
-          sprints: true,
-          backlogItems: true,
-        },
-      });
-    },
+        if (input.project_category_id !== undefined && input.project_category_id !== null) {
+          data.project_category_id = BigInt(input.project_category_id);
+        }
 
+        await prisma.project.create({ data });
+
+        return {
+          status: true,
+          message: "Project created successfully.",
+          timestamp: new Date().toISOString(),
+        };
+      } catch (error) {
+        return {
+          status: false,
+          message:
+            "Project creation failed: " + (error instanceof Error ? error.message : String(error)),
+          timestamp: new Date().toISOString(),
+        };
+      }
+    },
+    updateProject: async (_: any, { input }: any, context: Context) => {
+      requireRole(context, ["PROJECT_MANAGER"]);
+      const { prisma } = context;
+
+      try {
+        const data: any = {
+          ...(input.name && { name: input.name }),
+          ...(input.project_key && { project_key: input.project_key }),
+          ...(input.icon !== undefined && { icon: input.icon }),
+          ...(input.project_category_id !== undefined && {
+            project_category_id: BigInt(input.project_category_id),
+          }),
+          ...(input.project_lead_id !== undefined && {
+            project_lead_id: BigInt(input.project_lead_id),
+          }),
+          ...(input.delete_flag !== undefined && { delete_flag: input.delete_flag }),
+        };
+
+        await prisma.project.update({
+          where: { id: BigInt(input.id) },
+          data,
+        });
+
+        return {
+          status: true,
+          message: "Project updated successfully.",
+          timestamp: new Date().toISOString(),
+        };
+      } catch (error) {
+        return {
+          status: false,
+          message: "Update failed: " + (error instanceof Error ? error.message : String(error)),
+          timestamp: new Date().toISOString(),
+        };
+      }
+    },
     deleteProject: async (_: any, { id }: { id: bigint }) => {
       await prisma.project.delete({ where: { id: BigInt(id) } });
 
