@@ -32,7 +32,7 @@ async function init() {
   // app.get("/", (_req, res) => res.json({ message: "Server is running" }));
 
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}/graphql`);
   });
 }
 
