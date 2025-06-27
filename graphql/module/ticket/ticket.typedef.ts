@@ -18,9 +18,9 @@ export const ticketTypeDefs = gql`
   }
 
   type Ticket {
-    id: ID!
+    id: BigInt!
     ticket_key: String!
-    project_id: ID!
+    project: Project!
     work_type: WorkType!
     parent_id: ID
     summary: String!
@@ -70,18 +70,16 @@ export const ticketTypeDefs = gql`
     ticket(id: ID!): Ticket
     ticketLabels: [TicketLabel!]!
   }
-
+  input CreateTicketInput {
+    project_id: ID!
+    work_type: WorkType!
+    summary: String!
+    description: String
+    status_id: ID!
+    parent_id: ID
+  }
   type Mutation {
-    createTicket(
-      ticket_key: String!
-      project_id: ID!
-      work_type: WorkType!
-      summary: String!
-      description: String
-      status_id: ID!
-      created_by_id: ID!
-      parent_id: ID
-    ): Ticket!
+    createTicket(input: CreateTicketInput!): Ticket!
 
     updateTicket(
       id: ID!

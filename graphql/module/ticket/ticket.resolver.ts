@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from "@prisma/client";
+import { Context } from "../../../utils/context";
 const prisma = new PrismaClient();
 
 export const ticketResolvers = {
@@ -42,19 +43,161 @@ export const ticketResolvers = {
   },
 
   Mutation: {
-    createTicket: async (_: any, args: any) =>
-      prisma.ticket.create({
-        data: {
-          ticket_key: args.ticket_key,
-          project_id: BigInt(args.project_id),
-          work_type: args.work_type,
-          summary: args.summary,
-          description: args.description,
-          status_id: BigInt(args.status_id),
-          created_by_id: BigInt(args.created_by_id),
-          parent_id: args.parent_id ? BigInt(args.parent_id) : null,
+    // createTicket: async (_: any, { input }: any, context: Context) => {
+    //   const { project_id, work_type, summary, description, status_id, parent_id } = input;
+    //   const { user, prisma } = context;
+
+    //   if (!user) {
+    //     throw new Error("Unauthorized");
+    //   }
+    //   if (work_type === "SUBTASK" && !parent_id) {
+    //     throw new Error("parent_id is required for work_type 'SUBTASK'");
+    //   }
+
+    //   // 1. Get the project_key from the project ID
+    //   const project = await prisma.project.findUnique({
+    //     where: {
+    //       id: BigInt(project_id),
+    //     },
+    //     select: {
+    //       project_key: true,
+    //     },
+    //   });
+
+    //   if (!project) {
+    //     throw new Error("Invalid project ID");
+    //   }
+
+    //   const projectKey = project.project_key;
+
+    //   // 2. Find the last ticket for this project to determine the next ticket number
+    //   const lastTicket = await prisma.ticket.findFirst({
+    //     where: {
+    //       project_id: BigInt(project_id),
+    //     },
+    //     orderBy: {
+    //       created_at: "desc",
+    //     },
+    //     select: {
+    //       ticket_key: true,
+    //     },
+    //   });
+
+    //   // 3. Determine the next ticket number
+    //   let nextTicketNumber = 1;
+    //   if (lastTicket && lastTicket.ticket_key.startsWith(`${projectKey}-`)) {
+    //     const lastNumber = parseInt(lastTicket.ticket_key.split("-")[1]);
+    //     if (!isNaN(lastNumber)) {
+    //       nextTicketNumber = lastNumber + 1;
+    //     }
+    //   }
+
+    //   const ticketKey = `${projectKey}-${nextTicketNumber}`;
+
+    //   // 4. Create the ticket
+    //   const newTicket = await prisma.ticket.create({
+    //     data: {
+    //       ticket_key: ticketKey,
+    //       project_id: BigInt(project_id),
+    //       work_type,
+    //       summary,
+    //       description,
+    //       status_id: BigInt(status_id),
+    //       created_by_id: BigInt(user.userId),
+    //       parent_id: parent_id ? BigInt(parent_id) : null,
+    //     },
+    //   });
+
+    //   return newTicket;
+    // },
+    createTicket: async (_: any, { input }: any, context: Context) => {
+      const { project_id, work_type, summary, description, status_id, parent_id } = input;
+      const { user, prisma } = context;
+
+      if (!user) {
+        throw new Error("Unauthorized");
+      }
+
+      // 🔒 Validate parent_id if work_type is SUBTASK
+      if (work_type === "SUBTASK") {
+        if (!parent_id) {
+          throw new Error("parent_id is required for work_type 'SUBTASK'");
+        }
+
+        const parentTicket = await prisma.ticket.findUnique({
+          where: { id: BigInt(parent_id) },
+          select: {
+            id: true,
+            project_id: true,
+            work_type: true,
+          },
+        });
+
+        if (!parentTicket) {
+          throw new Error("Invalid parent_id: ticket not found");
+        }
+
+        if (parentTicket.project_id.toString() !== project_id.toString()) {
+          throw new Error("Parent ticket must belong to the same project");
+        }
+
+        if (parentTicket.work_type === "SUBTASK") {
+          throw new Error("Cannot nest a SUBTASK under another SUBTASK");
+        }
+      }
+
+      // 1. Get project_key
+      const project = await prisma.project.findUnique({
+        where: {
+          id: BigInt(project_id),
         },
-      }),
+        select: {
+          project_key: true,
+        },
+      });
+
+      if (!project) {
+        throw new Error("Invalid project ID");
+      }
+
+      const projectKey = project.project_key;
+
+      // 2. Get last ticket to determine next ticket_key
+      const lastTicket = await prisma.ticket.findFirst({
+        where: { project_id: BigInt(project_id) },
+        orderBy: { created_at: "desc" },
+        select: { ticket_key: true },
+      });
+
+      let nextTicketNumber = 1;
+      if (lastTicket && lastTicket.ticket_key.startsWith(`${projectKey}-`)) {
+        const lastNumber = parseInt(lastTicket.ticket_key.split("-")[1]);
+        if (!isNaN(lastNumber)) {
+          nextTicketNumber = lastNumber + 1;
+        }
+      }
+
+      const ticketKey = `${projectKey}-${nextTicketNumber}`;
+
+      // 3. Create ticket
+      const newTicket = await prisma.ticket.create({
+        data: {
+          ticket_key: ticketKey,
+          project_id: BigInt(project_id),
+          work_type,
+          summary,
+          description,
+          status_id: BigInt(status_id),
+          created_by_id: BigInt(user.userId),
+          parent_id: parent_id ? BigInt(parent_id) : null,
+        },
+        include: {
+          project: true, // 👈 include related project
+          created_by: true, // optional: include creator if needed
+        },
+      });
+      return newTicket;
+    },
 
     updateTicket: async (_: any, args: any) => {
       try {

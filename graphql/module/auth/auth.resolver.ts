@@ -2,6 +2,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
+import { Context } from "../../../utils/context";
 
 const prisma = new PrismaClient();
 
@@ -54,5 +55,73 @@ export const auhtResolvers = {
 
       return token;
     },
+  },
+  Query: {
+    users: async (_: any, __: any, context: Context) => {
+      const { user, prisma } = context;
+      console.log("Context user:", user?.role);
+
+      if (!user || !["PROJECT_MANAGER", "USER"].includes(user.role)) {
+        throw new Error("Unauthorized");
+      }
+
+      return await prisma.user.findMany({
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          role: true,
+          job_title: true,
+          department: true,
+          organization: true,
+          is_active: true,
+          delete_flag: true,
+          created_at: true,
+          updated_at: true,
+        },
+      });
+    },
+
+    user: async (_: any, { id }: { id: string }, context: Context) => {
+      const { user, prisma } = context;
+
+      if (!user) {
+        throw new Error("Unauthorized");
+      }
+
+      const foundUser = await prisma.user.findUnique({
+        where: { id: BigInt(id) },
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          role: true,
+          job_title: true,
+          department: true,
+          organization: true,
+          is_active: true,
+          delete_flag: true,
+          created_at: true,
+          updated_at: true,
+        },
+      });
+
+      if (!foundUser) {
+        throw new Error("User not found");
+      }
+
+      return foundUser;
+    },
+  },
+  User: {
+    firstName: (parent: { first_name: any }) => parent.first_name,
+    lastName: (parent: { last_name: any }) => parent.last_name,
+    jobTitle: (parent: { job_title: any }) => parent.job_title,
+    createdAt: (parent: { created_at: any }) => parent.created_at,
+    updatedAt: (parent: { updated_at: any }) => parent.updated_at,
+    isActive: (parent: { is_active: any }) => parent.is_active,
+    deleteFlag: (parent: { delete_flag: any }) => parent.delete_flag,
   },
 };

@@ -1,4 +1,3 @@
-// schema/typeDefs/boardStatus.ts
 import gql from "graphql-tag";
 
 export const boardStatusTypeDefs = gql`
@@ -12,6 +11,8 @@ export const boardStatusTypeDefs = gql`
     id: BigInt!
     name: String!
     status_category: StatusCategory!
+    project_id: BigInt!
+    project: Project
     delete_flag: Boolean!
     created_at: String!
     updated_at: String!
@@ -27,12 +28,15 @@ export const boardStatusTypeDefs = gql`
   type BoardStatusListResponse {
     status: Boolean!
     message: String!
+    timestamp: String!
     data: [BoardStatus!]!
   }
+
   type BoardStatusResponse {
     status: Boolean!
     message: String!
-    data: BoardStatus
+    timestamp: String!
+    boardStatus: BoardStatus
   }
 
   type Query {
@@ -41,7 +45,11 @@ export const boardStatusTypeDefs = gql`
   }
 
   type Mutation {
-    createBoardStatus(name: String!, status_category: StatusCategory!): MutationResponse!
+    createBoardStatus(
+      name: String!
+      status_category: StatusCategory!
+      project_id: ID!
+    ): BoardStatusResponse!
 
     updateBoardStatus(id: ID!, name: String, status_category: StatusCategory): MutationResponse!
 

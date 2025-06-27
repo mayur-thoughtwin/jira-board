@@ -2,6 +2,7 @@
 // schema/resolvers/boardStatus.ts
 // import { PrismaClient } from "@prisma/client";
 import { Context } from "../../../utils/context";
+import { requireRole } from "../../../utils/requireRole";
 
 export const boardStatusResolvers = {
   Query: {
@@ -13,10 +14,11 @@ export const boardStatusResolvers = {
           where: { delete_flag: false },
           orderBy: { id: "asc" },
         });
-
+        console.log("Fetched BoardStatuses:", statuses);
         return {
           status: true,
           message: "Data fetched successfully",
+          timestamp: new Date().toISOString(),
           data: statuses,
         };
       } catch (error) {
@@ -42,12 +44,14 @@ export const boardStatusResolvers = {
           return {
             status: false,
             message: "BoardStatus not found",
+            timestamp: new Date().toISOString(),
             data: null,
           };
         }
 
         return {
           status: true,
+          timestamp: new Date().toISOString(),
           message: "BoardStatus fetched successfully",
           data: status,
         };
@@ -66,20 +70,41 @@ export const boardStatusResolvers = {
   Mutation: {
     createBoardStatus: async (
       _: any,
-      args: { name: string; status_category: string },
+      args: { name: string; status_category: string; project_id: string },
       context: Context,
     ) => {
-      const { user, prisma } = context;
+      const { prisma, user } = context;
 
-      if (!user || !["ADMIN", "PROJECT_MANAGER"].includes(user.role)) {
-        throw new Error("Unauthorized");
+      requireRole(context, ["ADMIN", "PROJECT_MANAGER"]);
+
+      const projectId = BigInt(args.project_id);
+
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+      });
+
+      if (!project) {
+        return {
+          status: false,
+          message: "Project not found.",
+          timestamp: new Date().toISOString(),
+          boardStatus: null,
+        };
       }
 
-      console.log("user==>", user);
+      if (!user || project.project_lead_id !== BigInt(user.userId)) {
+        return {
+          status: false,
+          message: "You are not the lead of this project.",
+          timestamp: new Date().toISOString(),
+          boardStatus: null,
+        };
+      }
 
       const existing = await prisma.boardStatus.findFirst({
         where: {
           name: args.name,
+          project_id: projectId,
           delete_flag: false,
         },
       });
@@ -87,7 +112,7 @@ export const boardStatusResolvers = {
       if (existing) {
         return {
           status: false,
-          message: "BoardStatus with this name already exists.",
+          message: "BoardStatus with this name already exists for this project.",
           timestamp: new Date().toISOString(),
           boardStatus: null,
         };
@@ -97,6 +122,7 @@ export const boardStatusResolvers = {
         data: {
           name: args.name,
           status_category: args.status_category as any,
+          project_id: projectId,
         },
         include: { tickets: true },
       });
@@ -108,7 +134,6 @@ export const boardStatusResolvers = {
         boardStatus: created,
       };
     },
-
     updateBoardStatus: async (
       _: any,
       args: { id: string; name?: string; status_category?: string },
@@ -123,7 +148,6 @@ export const boardStatusResolvers = {
       try {
         const id = BigInt(args.id);
 
-        // If name is being updated, check for duplicates
         if (args.name) {
           const duplicate = await prisma.boardStatus.findFirst({
             where: {

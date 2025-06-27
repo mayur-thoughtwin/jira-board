@@ -13,16 +13,16 @@ import { ticketTypeDefs } from "./ticket/ticket.typedef";
 
 export const typeDefs = [
   authTypeDefs,
-  projectCategoryTypeDefs,
   projectTypeDefs,
+  projectCategoryTypeDefs,
   boardStatusTypeDefs,
   ticketTypeDefs,
   sprintTypeDefs,
 ];
 export const resolvers = [
   auhtResolvers,
-  projectCategoryResolvers,
   projectResolvers,
+  projectCategoryResolvers,
   boardStatusResolvers,
   ticketResolvers,
   sprintResolvers,

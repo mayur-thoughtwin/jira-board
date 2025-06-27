@@ -8,61 +8,59 @@ datasource db {
 }
 
 model User {
-  id              BigInt        @id @default(autoincrement())
-  first_name      String
-  last_name       String
-  email           String        @unique
-  password        String        
-  is_active       Boolean       @default(true)
-  role            Role
-  job_title       String?
-  department      String?
-  organization    String?
-  delete_flag     Boolean       @default(false)
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
+  id           BigInt   @id @default(autoincrement())
+  first_name   String
+  last_name    String
+  email        String   @unique
+  password     String
+  is_active    Boolean  @default(true)
+  role         Role
+  job_title    String?
+  department   String?
+  organization String?
+  delete_flag  Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
-  projectsLed     Project[]    @relation("ProjectLead")
-  createdTickets  Ticket[]     @relation("CreatedBy")
-  assignedTickets TicketData[] @relation("Assignee")
-  reportedTickets TicketData[] @relation("Reporter")
+  projectsLed      Project[]          @relation("ProjectLead")
+  createdTickets   Ticket[]           @relation("CreatedBy")
+  assignedTickets  TicketData[]       @relation("Assignee")
+  reportedTickets  TicketData[]       @relation("Reporter")
   collaborators    UserCollaborator[] @relation("UserCollaboratorUser")
   collaboratedWith UserCollaborator[] @relation("UserCollaboratorCollaborator")
 }
 
 model UserCollaborator {
-  id              BigInt @id @default(autoincrement())
+  id BigInt @id @default(autoincrement())
 
-  user            User   @relation("UserCollaboratorUser", fields: [user_id], references: [id])
-  user_id         BigInt
+  user    User   @relation("UserCollaboratorUser", fields: [user_id], references: [id])
+  user_id BigInt
 
   collaborator    User   @relation("UserCollaboratorCollaborator", fields: [collaborator_id], references: [id])
   collaborator_id BigInt
 
-  created_at      DateTime @default(now())
+  created_at DateTime @default(now())
 
   @@unique([user_id, collaborator_id]) // Prevent duplicate entries
 }
 
-
-
-
 model Project {
-  id                  BigInt          @id @default(autoincrement())
+  id                  BigInt           @id @default(autoincrement())
   name                String
-  project_key         String          @unique
+  project_key         String           @unique
   icon                String?
   project_category    ProjectCategory? @relation(fields: [project_category_id], references: [id])
   project_category_id BigInt?
-  project_lead        User            @relation("ProjectLead", fields: [project_lead_id], references: [id])
+  project_lead        User             @relation("ProjectLead", fields: [project_lead_id], references: [id])
   project_lead_id     BigInt
-  delete_flag         Boolean         @default(false)
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
+  delete_flag         Boolean          @default(false)
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
 
-  tickets      Ticket[]
-  sprints      Sprint[]
-  backlogItems Backlog[]
+  tickets       Ticket[]
+  sprints       Sprint[]
+  backlogItems  Backlog[]
+  boardStatuses BoardStatus[]
 }
 
 model ProjectCategory {
@@ -80,6 +78,8 @@ model BoardStatus {
   id              BigInt         @id @default(autoincrement())
   name            String
   status_category StatusCategory
+  project         Project?        @relation(fields: [project_id], references: [id])
+  project_id      BigInt?
   delete_flag     Boolean        @default(false)
   created_at      DateTime       @default(now())
   updated_at      DateTime       @updatedAt
