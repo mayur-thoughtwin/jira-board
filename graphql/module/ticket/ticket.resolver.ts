@@ -118,7 +118,6 @@ export const ticketResolvers = {
         throw new Error("Unauthorized");
       }
 
-      // 🔒 Validate parent_id if work_type is SUBTASK
       if (work_type === "SUBTASK") {
         if (!parent_id) {
           throw new Error("parent_id is required for work_type 'SUBTASK'");
@@ -146,7 +145,6 @@ export const ticketResolvers = {
         }
       }
 
-      // 1. Get project_key
       const project = await prisma.project.findUnique({
         where: {
           id: BigInt(project_id),
@@ -162,7 +160,6 @@ export const ticketResolvers = {
 
       const projectKey = project.project_key;
 
-      // 2. Get last ticket to determine next ticket_key
       const lastTicket = await prisma.ticket.findFirst({
         where: { project_id: BigInt(project_id) },
         orderBy: { created_at: "desc" },
@@ -179,7 +176,6 @@ export const ticketResolvers = {
 
       const ticketKey = `${projectKey}-${nextTicketNumber}`;
 
-      // 3. Create ticket
       const newTicket = await prisma.ticket.create({
         data: {
           ticket_key: ticketKey,

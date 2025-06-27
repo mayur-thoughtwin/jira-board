@@ -2,6 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import { Context } from "../../../utils/context";
 import { requireRole } from "../../../utils/requireRole";
+import { successMessage } from "../../../constants/successmessage";
 const prisma = new PrismaClient();
 
 export const projectResolvers = {
@@ -57,7 +58,7 @@ export const projectResolvers = {
 
         return {
           status: true,
-          message: "Project created successfully.",
+          message: successMessage.PROJECT_CREATED,
           timestamp: new Date().toISOString(),
         };
       } catch (error) {
@@ -94,7 +95,7 @@ export const projectResolvers = {
 
         return {
           status: true,
-          message: "Project updated successfully.",
+          message: successMessage.PROJECT_UPDATED,
           timestamp: new Date().toISOString(),
         };
       } catch (error) {
@@ -110,7 +111,7 @@ export const projectResolvers = {
 
       return {
         status: true,
-        message: "Project deleted successfully",
+        message: successMessage.PROJECT_DELETED,
         timestamp: new Date().toISOString(),
       };
     },

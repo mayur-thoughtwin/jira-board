@@ -3,6 +3,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { Context } from "../../../utils/context";
+import { errorMessage } from "../../../constants/errormessage";
+import { successMessage } from "../../../constants/successmessage";
 
 const prisma = new PrismaClient();
 
@@ -16,7 +18,7 @@ export const auhtResolvers = {
 
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) {
-        throw new Error("User with this email already exists.");
+        throw new Error(errorMessage.USER_EXISTS);
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -36,7 +38,7 @@ export const auhtResolvers = {
 
       return {
         status: true,
-        message: "User created successfully",
+        message: successMessage.USER_CREATED,
         timestamp: new Date().toISOString(),
       };
     },
@@ -44,10 +46,10 @@ export const auhtResolvers = {
     login: async (_: any, { email, password }: any) => {
       const user = await prisma.user.findUnique({ where: { email } });
 
-      if (!user) throw new Error("Invalid email or password");
+      if (!user) throw new Error(errorMessage.INVALID_CREDENTIALS);
 
       const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) throw new Error("Invalid email or password");
+      if (!isMatch) throw new Error(errorMessage.INVALID_CREDENTIALS);
 
       const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, SECRET, {
         expiresIn: "7d",
@@ -109,7 +111,7 @@ export const auhtResolvers = {
       });
 
       if (!foundUser) {
-        throw new Error("User not found");
+        throw new Error(errorMessage.USER_NOT_FOUND);
       }
 
       return foundUser;

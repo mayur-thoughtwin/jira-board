@@ -3,4 +3,11 @@ export const successMessage = {
   DEPARTMENT_UPDATED: "Department updated successfully",
   DEPARTMENT_DELETED: "Department deleted successfully",
   PROJECT_CREATED: "Project created successfully",
+  USER_CREATED: "User created successfully",
+  DATA_FETCHED: "Data fetched successfully",
+  BOARD_STATUS_CREATED: "BoardStatus created successfully",
+  BOARD_STATUS_UPDATED: "BoardStatus updated successfully",
+  BOARD_STATUS_DELETED: "BoardStatus deleted successfully",
+  PROJECT_UPDATED: "Project updated successfully",
+  PROJECT_DELETED: "Project deleted successfully",
 };

@@ -2,4 +2,11 @@ export const errorMessage = {
   DEPARTMENT_EXISTS: "Department already exists",
   DEPARTMENT_NOT_FOUND: "Department not found",
   PROJECT_EXISTS: "Project with this key already exists",
+  USER_EXISTS: "User with this email already exists.",
+  INVALID_CREDENTIALS: "Invalid email or password",
+  USER_NOT_FOUND: "User not found",
+  PROJECT_NOT_FOUND: "Project not found",
+  BOARD_STATUS_NOT_FOUND: "BoardStatus not found",
+  NOT_PROJECT_LEAD: "You are not the lead of this project.",
+  BOARD_STATUS_EXISTS: "BoardStatus with this name already exists for this project.",
 };

@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // schema/resolvers/boardStatus.ts
 // import { PrismaClient } from "@prisma/client";
+import { successMessage } from "../../../constants/successmessage";
 import { Context } from "../../../utils/context";
 import { requireRole } from "../../../utils/requireRole";
+import { errorMessage } from "../../../constants/errormessage";
 
 export const boardStatusResolvers = {
   Query: {
@@ -17,7 +19,7 @@ export const boardStatusResolvers = {
         console.log("Fetched BoardStatuses:", statuses);
         return {
           status: true,
-          message: "Data fetched successfully",
+          message: successMessage.DATA_FETCHED,
           timestamp: new Date().toISOString(),
           data: statuses,
         };
@@ -43,7 +45,7 @@ export const boardStatusResolvers = {
         if (!status) {
           return {
             status: false,
-            message: "BoardStatus not found",
+            message: errorMessage.BOARD_STATUS_NOT_FOUND,
             timestamp: new Date().toISOString(),
             data: null,
           };
@@ -52,7 +54,7 @@ export const boardStatusResolvers = {
         return {
           status: true,
           timestamp: new Date().toISOString(),
-          message: "BoardStatus fetched successfully",
+          message: successMessage.DATA_FETCHED,
           data: status,
         };
       } catch (error) {
@@ -86,7 +88,7 @@ export const boardStatusResolvers = {
       if (!project) {
         return {
           status: false,
-          message: "Project not found.",
+          message: errorMessage.PROJECT_NOT_FOUND,
           timestamp: new Date().toISOString(),
           boardStatus: null,
         };
@@ -95,7 +97,7 @@ export const boardStatusResolvers = {
       if (!user || project.project_lead_id !== BigInt(user.userId)) {
         return {
           status: false,
-          message: "You are not the lead of this project.",
+          message: errorMessage.NOT_PROJECT_LEAD,
           timestamp: new Date().toISOString(),
           boardStatus: null,
         };
@@ -112,7 +114,7 @@ export const boardStatusResolvers = {
       if (existing) {
         return {
           status: false,
-          message: "BoardStatus with this name already exists for this project.",
+          message: errorMessage.BOARD_STATUS_EXISTS,
           timestamp: new Date().toISOString(),
           boardStatus: null,
         };
@@ -129,7 +131,7 @@ export const boardStatusResolvers = {
 
       return {
         status: true,
-        message: "BoardStatus created successfully.",
+        message: successMessage.BOARD_STATUS_CREATED,
         timestamp: new Date().toISOString(),
         boardStatus: created,
       };
@@ -160,7 +162,7 @@ export const boardStatusResolvers = {
           if (duplicate) {
             return {
               status: false,
-              message: "Another BoardStatus with this name already exists.",
+              message: errorMessage.BOARD_STATUS_EXISTS,
               timestamp: new Date().toISOString(),
             };
           }
@@ -176,7 +178,7 @@ export const boardStatusResolvers = {
 
         return {
           status: true,
-          message: "BoardStatus updated successfully.",
+          message: successMessage.BOARD_STATUS_UPDATED,
           timestamp: new Date().toISOString(),
         };
       } catch (error) {
@@ -191,7 +193,6 @@ export const boardStatusResolvers = {
     deleteBoardStatus: async (_: any, args: { id: string }, context: Context) => {
       const { user, prisma } = context;
 
-      // Authorization check
       if (!user || !["ADMIN", "PROJECT_MANAGER"].includes(user.role)) {
         throw new Error("Unauthorized");
       }
@@ -204,7 +205,7 @@ export const boardStatusResolvers = {
 
         return {
           status: true,
-          message: "BoardStatus soft-deleted successfully.",
+          message: successMessage.BOARD_STATUS_DELETED,
           timestamp: new Date().toISOString(),
         };
       } catch (error) {
