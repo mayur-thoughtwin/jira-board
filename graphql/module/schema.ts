@@ -10,6 +10,8 @@ import { projectCategoryResolvers } from "./projectCategory/project.category.res
 import { projectCategoryTypeDefs } from "./projectCategory/project.category.typedef";
 import { ticketResolvers } from "./ticket/ticket.resolver";
 import { ticketTypeDefs } from "./ticket/ticket.typedef";
+import { userCollaboratorTypeDefs } from "./user-collaborator/user.collaborator.typedef";
+import { userCollaboratorResolvers } from "./user-collaborator/user.collaborator.resolver";
 
 export const typeDefs = [
   authTypeDefs,
@@ -18,6 +20,7 @@ export const typeDefs = [
   boardStatusTypeDefs,
   ticketTypeDefs,
   sprintTypeDefs,
+  userCollaboratorTypeDefs,
 ];
 export const resolvers = [
   auhtResolvers,
@@ -26,4 +29,5 @@ export const resolvers = [
   boardStatusResolvers,
   ticketResolvers,
   sprintResolvers,
+  userCollaboratorResolvers,
 ];

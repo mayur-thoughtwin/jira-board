@@ -36,8 +36,10 @@ model UserCollaborator {
   user    User   @relation("UserCollaboratorUser", fields: [user_id], references: [id])
   user_id BigInt
 
-  collaborator    User   @relation("UserCollaboratorCollaborator", fields: [collaborator_id], references: [id])
+  collaborator    User    @relation("UserCollaboratorCollaborator", fields: [collaborator_id], references: [id])
   collaborator_id BigInt
+  project         Project @relation(fields: [project_id], references: [id])
+  project_id      BigInt
 
   created_at DateTime @default(now())
 
@@ -61,6 +63,7 @@ model Project {
   sprints       Sprint[]
   backlogItems  Backlog[]
   boardStatuses BoardStatus[]
+  collaborators UserCollaborator[]
 }
 
 model ProjectCategory {
@@ -78,7 +81,7 @@ model BoardStatus {
   id              BigInt         @id @default(autoincrement())
   name            String
   status_category StatusCategory
-  project         Project?        @relation(fields: [project_id], references: [id])
+  project         Project?       @relation(fields: [project_id], references: [id])
   project_id      BigInt?
   delete_flag     Boolean        @default(false)
   created_at      DateTime       @default(now())
@@ -123,7 +126,7 @@ model TicketData {
   estimate_points Int?
   sprint          Sprint?       @relation(fields: [sprint_id], references: [id])
   sprint_id       BigInt?
-  labels          TicketLabel[] @relation("TicketDataLabels") // Fixed relation
+  labels          TicketLabel[] @relation("TicketDataLabels")
 }
 
 model Sprint {
@@ -157,7 +160,7 @@ model Backlog {
 model TicketLabel {
   id      BigInt       @id @default(autoincrement())
   name    String       @unique
-  tickets TicketData[] @relation("TicketDataLabels") // Fixed relation
+  tickets TicketData[] @relation("TicketDataLabels")
 }
 
 enum Role {

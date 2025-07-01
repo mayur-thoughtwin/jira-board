@@ -5,9 +5,39 @@ const prisma = new PrismaClient();
 
 export const ticketResolvers = {
   Query: {
-    tickets: () =>
-      prisma.ticket.findMany({
-        where: { delete_flag: false },
+    tickets: async (_: any, args: { project_id: string; search?: string }, context: Context) => {
+      const { user, prisma } = context;
+
+      if (!user) {
+        throw new Error("Unauthorized");
+      }
+
+      const project = await prisma.project.findUnique({
+        where: {
+          id: BigInt(args.project_id),
+        },
+      });
+
+      if (!project) {
+        throw new Error("Project not found");
+      }
+
+      const searchFilter = args.search
+        ? {
+            OR: [
+              { summary: { contains: args.search, mode: "insensitive" } },
+              { description: { contains: args.search, mode: "insensitive" } },
+              { ticket_key: { contains: args.search, mode: "insensitive" } },
+            ],
+          }
+        : {};
+
+      return prisma.ticket.findMany({
+        where: {
+          project_id: BigInt(args.project_id),
+          delete_flag: false,
+          ...searchFilter,
+        },
         include: {
           parent: true,
           children: true,
@@ -21,7 +51,8 @@ export const ticketResolvers = {
           },
           backlogItem: true,
         },
-      }),
+      });
+    },
     ticket: (_: any, args: { id: string }) =>
       prisma.ticket.findUnique({
         where: { id: BigInt(args.id) },
@@ -43,73 +74,6 @@ export const ticketResolvers = {
   },
 
   Mutation: {
-    // createTicket: async (_: any, { input }: any, context: Context) => {
-    //   const { project_id, work_type, summary, description, status_id, parent_id } = input;
-    //   const { user, prisma } = context;
-
-    //   if (!user) {
-    //     throw new Error("Unauthorized");
-    //   }
-    //   if (work_type === "SUBTASK" && !parent_id) {
-    //     throw new Error("parent_id is required for work_type 'SUBTASK'");
-    //   }
-
-    //   // 1. Get the project_key from the project ID
-    //   const project = await prisma.project.findUnique({
-    //     where: {
-    //       id: BigInt(project_id),
-    //     },
-    //     select: {
-    //       project_key: true,
-    //     },
-    //   });
-
-    //   if (!project) {
-    //     throw new Error("Invalid project ID");
-    //   }
-
-    //   const projectKey = project.project_key;
-
-    //   // 2. Find the last ticket for this project to determine the next ticket number
-    //   const lastTicket = await prisma.ticket.findFirst({
-    //     where: {
-    //       project_id: BigInt(project_id),
-    //     },
-    //     orderBy: {
-    //       created_at: "desc",
-    //     },
-    //     select: {
-    //       ticket_key: true,
-    //     },
-    //   });
-
-    //   // 3. Determine the next ticket number
-    //   let nextTicketNumber = 1;
-    //   if (lastTicket && lastTicket.ticket_key.startsWith(`${projectKey}-`)) {
-    //     const lastNumber = parseInt(lastTicket.ticket_key.split("-")[1]);
-    //     if (!isNaN(lastNumber)) {
-    //       nextTicketNumber = lastNumber + 1;
-    //     }
-    //   }
-
-    //   const ticketKey = `${projectKey}-${nextTicketNumber}`;
-
-    //   // 4. Create the ticket
-    //   const newTicket = await prisma.ticket.create({
-    //     data: {
-    //       ticket_key: ticketKey,
-    //       project_id: BigInt(project_id),
-    //       work_type,
-    //       summary,
-    //       description,
-    //       status_id: BigInt(status_id),
-    //       created_by_id: BigInt(user.userId),
-    //       parent_id: parent_id ? BigInt(parent_id) : null,
-    //     },
-    //   });
-
-    //   return newTicket;
-    // },
     createTicket: async (_: any, { input }: any, context: Context) => {
       const { project_id, work_type, summary, description, status_id, parent_id } = input;
       const { user, prisma } = context;
@@ -188,8 +152,8 @@ export const ticketResolvers = {
           parent_id: parent_id ? BigInt(parent_id) : null,
         },
         include: {
-          project: true, // 👈 include related project
-          created_by: true, // optional: include creator if needed
+          project: true,
+          created_by: true,
         },
       });
       return newTicket;

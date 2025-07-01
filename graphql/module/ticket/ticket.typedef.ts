@@ -66,7 +66,7 @@ export const ticketTypeDefs = gql`
   }
 
   type Query {
-    tickets: [Ticket!]!
+    tickets(project_id: ID!, search: String): [Ticket!]!
     ticket(id: ID!): Ticket
     ticketLabels: [TicketLabel!]!
   }
