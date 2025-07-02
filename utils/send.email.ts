@@ -15,5 +15,5 @@ export const sendEmail = async ({ to, subject, template, context }: EmailData) =
     subject,
     template: `emails/${template}`,
     context,
-  });
+  } as any);
 };

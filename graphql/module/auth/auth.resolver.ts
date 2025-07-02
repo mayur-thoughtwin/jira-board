@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { Context } from "../../../utils/context";
 import { errorMessage } from "../../../constants/errormessage";
 import { successMessage } from "../../../constants/successmessage";
-
+// import {totp} from "otplib"
 const prisma = new PrismaClient();
 
 const SECRET = process.env.JWT_SECRET || "supersecretkey";
