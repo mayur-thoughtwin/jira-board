@@ -44,7 +44,7 @@ export const authTypeDefs = gql`
       department: String
       organization: String
     ): MutationResponse!
-
+    otpVerify(email: String!, otp: Int!): MutationResponse!
     login(email: String!, password: String!): String!
   }
 `;

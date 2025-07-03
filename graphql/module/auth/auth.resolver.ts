@@ -5,6 +5,8 @@ import { PrismaClient } from "@prisma/client";
 import { Context } from "../../../utils/context";
 import { errorMessage } from "../../../constants/errormessage";
 import { successMessage } from "../../../constants/successmessage";
+import { generateOtpCodeWithExpiry } from "../../../utils/otp";
+import { sendEmail } from "../../../utils/send.email";
 // import {totp} from "otplib"
 const prisma = new PrismaClient();
 
@@ -17,32 +19,80 @@ export const auhtResolvers = {
         args;
 
       const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser) {
+
+      if (existingUser?.otp_verified === true) {
         throw new Error(errorMessage.USER_EXISTS);
       }
 
+      const { otp, expiresAt } = generateOtpCodeWithExpiry();
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      await prisma.user.create({
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          password: hashedPassword,
-          role,
-          job_title: jobTitle,
-          department,
-          organization,
+      const userData = {
+        first_name: firstName,
+        last_name: lastName,
+        password: hashedPassword,
+        role,
+        job_title: jobTitle,
+        department,
+        organization,
+        otp: Number(otp),
+        otp_expires_at: expiresAt,
+        otp_verified: false,
+      };
+
+      if (existingUser?.otp_verified === false) {
+        await prisma.user.update({
+          where: { email },
+          data: userData,
+        });
+      } else {
+        await prisma.user.create({
+          data: {
+            email,
+            ...userData,
+          },
+        });
+      }
+      await sendEmail({
+        to: email,
+        subject: "OTP Verification",
+        template: "otp",
+        context: {
+          name: firstName,
+          otp,
         },
       });
 
       return {
         status: true,
-        message: successMessage.USER_CREATED,
+        message: successMessage.OTP_SENT,
         timestamp: new Date().toISOString(),
       };
     },
+    otpVerify: async (_: any, { email, otp }: { email: string; otp: number }) => {
+      const user = await prisma.user.findUnique({ where: { email } });
 
+      if (!user) throw new Error(errorMessage.USER_NOT_FOUND);
+
+      if (user.otp !== otp) {
+        throw new Error(errorMessage.INVALID_OTP);
+      }
+
+      if (!user.otp_expires_at || user.otp_expires_at < new Date()) {
+        throw new Error(errorMessage.OTP_EXPIRED);
+      }
+
+      await prisma.user.update({
+        where: { email },
+        data: { otp_verified: true },
+      });
+
+      return {
+        status: true,
+        message: successMessage.OTP_VERIFIED,
+        timestamp: new Date().toISOString(),
+      };
+    },
     login: async (_: any, { email, password }: any) => {
       const user = await prisma.user.findUnique({ where: { email } });
 
@@ -77,7 +127,6 @@ export const auhtResolvers = {
           job_title: true,
           department: true,
           organization: true,
-          is_active: true,
           delete_flag: true,
           created_at: true,
           updated_at: true,
@@ -103,7 +152,6 @@ export const auhtResolvers = {
           job_title: true,
           department: true,
           organization: true,
-          is_active: true,
           delete_flag: true,
           created_at: true,
           updated_at: true,
@@ -123,7 +171,6 @@ export const auhtResolvers = {
     jobTitle: (parent: { job_title: any }) => parent.job_title,
     createdAt: (parent: { created_at: any }) => parent.created_at,
     updatedAt: (parent: { updated_at: any }) => parent.updated_at,
-    isActive: (parent: { is_active: any }) => parent.is_active,
     deleteFlag: (parent: { delete_flag: any }) => parent.delete_flag,
   },
 };

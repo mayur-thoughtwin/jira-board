@@ -9,4 +9,6 @@ export const errorMessage = {
   BOARD_STATUS_NOT_FOUND: "BoardStatus not found",
   NOT_PROJECT_LEAD: "You are not the lead of this project.",
   BOARD_STATUS_EXISTS: "BoardStatus with this name already exists for this project.",
+  INVALID_OTP: "Invalid OTP",
+  OTP_EXPIRED: "OTP has expired",
 };

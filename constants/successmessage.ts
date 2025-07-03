@@ -10,4 +10,6 @@ export const successMessage = {
   BOARD_STATUS_DELETED: "BoardStatus deleted successfully",
   PROJECT_UPDATED: "Project updated successfully",
   PROJECT_DELETED: "Project deleted successfully",
+  OTP_SENT: "OTP sent to your registered email.",
+  OTP_VERIFIED: "OTP verified successfully",
 };
