@@ -11,4 +11,5 @@ export const errorMessage = {
   BOARD_STATUS_EXISTS: "BoardStatus with this name already exists for this project.",
   INVALID_OTP: "Invalid OTP",
   OTP_EXPIRED: "OTP has expired",
+  INVALID_OLD_PASSWORD: "Invalid old password",
 };

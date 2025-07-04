@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request } from "express";
-import { verifyToken } from "./auth";
 import { PrismaClient } from "@prisma/client";
+import { verifyToken } from "./verify.token";
 
 const prisma = new PrismaClient();
 
@@ -13,14 +14,26 @@ export interface Context {
   };
 }
 
-export const createContext = ({ req }: { req: Request }): Context => {
+export const createContext = async ({ req }: { req: Request }): Promise<Context> => {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.replace("Bearer ", "");
 
-  const user = verifyToken(token);
+  // ✅ Skip auth for introspection query
+  if (req.body?.operationName === "IntrospectionQuery") {
+    return { prisma };
+  }
 
-  return {
-    prisma,
-    user: user || undefined,
-  };
+  try {
+    const decoded = await verifyToken(token); // wait for async function
+    if (!decoded) return { prisma };
+
+    const { userId, email, role } = decoded;
+    return {
+      prisma,
+      user: { userId, email, role },
+    };
+  } catch (err: any) {
+    console.warn("Auth error:", err.message);
+    return { prisma }; // Let the request through without user
+  }
 };

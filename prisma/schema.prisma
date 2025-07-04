@@ -8,21 +8,22 @@ datasource db {
 }
 
 model User {
-  id             BigInt    @id @default(autoincrement())
-  first_name     String
-  last_name      String
-  email          String    @unique
-  password       String
-  otp            Int?
-  otp_expires_at DateTime?
-  otp_verified   Boolean   @default(false)
-  role           Role
-  job_title      String?
-  department     String?
-  organization   String?
-  delete_flag    Boolean   @default(false)
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt
+  id                  BigInt    @id @default(autoincrement())
+  first_name          String
+  last_name           String
+  email               String    @unique
+  password            String
+  password_changed_at DateTime?
+  otp                 Int?
+  otp_expires_at      DateTime?
+  otp_verified        Boolean   @default(false)
+  role                Role
+  job_title           String?
+  department          String?
+  organization        String?
+  delete_flag         Boolean   @default(false)
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
 
   projectsLed      Project[]          @relation("ProjectLead")
   createdTickets   Ticket[]           @relation("CreatedBy")

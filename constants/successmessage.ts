@@ -12,4 +12,5 @@ export const successMessage = {
   PROJECT_DELETED: "Project deleted successfully",
   OTP_SENT: "OTP sent to your registered email.",
   OTP_VERIFIED: "OTP verified successfully",
+  PASSWORD_CHANGED: "Password changed successfully",
 };

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { Context } from "../../../utils/context";
@@ -7,7 +6,7 @@ import { errorMessage } from "../../../constants/errormessage";
 import { successMessage } from "../../../constants/successmessage";
 import { generateOtpCodeWithExpiry } from "../../../utils/otp";
 import { sendEmail } from "../../../utils/send.email";
-// import {totp} from "otplib"
+import { comparePassword, hashPassword } from "../../../utils/comparePassword";
 const prisma = new PrismaClient();
 
 const SECRET = process.env.JWT_SECRET || "supersecretkey";
@@ -25,7 +24,7 @@ export const auhtResolvers = {
       }
 
       const { otp, expiresAt } = generateOtpCodeWithExpiry();
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await hashPassword(password);
 
       const userData = {
         first_name: firstName,
@@ -98,7 +97,7 @@ export const auhtResolvers = {
 
       if (!user) throw new Error(errorMessage.INVALID_CREDENTIALS);
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await comparePassword(password, user.password);
       if (!isMatch) throw new Error(errorMessage.INVALID_CREDENTIALS);
 
       const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, SECRET, {
@@ -106,6 +105,44 @@ export const auhtResolvers = {
       });
 
       return token;
+    },
+    changePassword: async (
+      _: any,
+      { oldPassword, newPassword }: { oldPassword: string; newPassword: string },
+      context: Context,
+    ) => {
+      const { user, prisma } = context;
+      console.log(" user:", user);
+      if (!user || !user.email) {
+        throw new Error("Unauthorized");
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email },
+      });
+
+      if (!existingUser) {
+        throw new Error(errorMessage.USER_NOT_FOUND);
+      }
+
+      // Directly compare the passwords without additional hashing
+      const isOldPasswordCorrect = await comparePassword(oldPassword, existingUser.password);
+      if (!isOldPasswordCorrect) {
+        throw new Error(errorMessage.INVALID_OLD_PASSWORD || "Old password is incorrect");
+      }
+
+      // Hash and save the new password
+      const hashedNewPassword = await hashPassword(newPassword);
+      await prisma.user.update({
+        where: { email: user.email },
+        data: { password: hashedNewPassword, password_changed_at: new Date() },
+      });
+
+      return {
+        status: true,
+        message: successMessage.PASSWORD_CHANGED || "Password updated successfully",
+        timestamp: new Date().toISOString(),
+      };
     },
   },
   Query: {
