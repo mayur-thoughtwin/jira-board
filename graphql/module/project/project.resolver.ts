@@ -72,9 +72,24 @@ export const projectResolvers = {
     },
     updateProject: async (_: any, { input }: any, context: Context) => {
       requireRole(context, ["PROJECT_MANAGER"]);
-      const { prisma } = context;
+      const { user, prisma } = context;
 
       try {
+        const project = await prisma.project.findUnique({
+          where: { id: BigInt(input.id) },
+        });
+
+        if (!project) {
+          throw new Error("Project not found");
+        }
+
+        if (user?.userId === undefined) {
+          throw new Error("Invalid token: userId missing");
+        }
+        if (project.project_lead_id !== BigInt(user.userId)) {
+          throw new Error("You are not authorized to update this project.");
+        }
+
         const data: any = {
           ...(input.name && { name: input.name }),
           ...(input.project_key && { project_key: input.project_key }),

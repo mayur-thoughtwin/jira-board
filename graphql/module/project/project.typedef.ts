@@ -33,7 +33,6 @@ export const projectTypeDefs = gql`
     project_key: String
     icon: String
     project_category_id: BigInt
-    project_lead_id: BigInt
     delete_flag: Boolean
   }
 

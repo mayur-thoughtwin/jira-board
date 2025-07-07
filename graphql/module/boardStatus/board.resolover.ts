@@ -16,7 +16,6 @@ export const boardStatusResolvers = {
           where: { delete_flag: false },
           orderBy: { id: "asc" },
         });
-        console.log("Fetched BoardStatuses:", statuses);
         return {
           status: true,
           message: successMessage.DATA_FETCHED,
